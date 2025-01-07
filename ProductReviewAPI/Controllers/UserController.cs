@@ -1,10 +1,13 @@
-﻿using Azure.Identity;
+﻿using System.Data;
+using Azure.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProductReviewAPI.Dtos.User;
 using ProductReviewAPI.Entities;
 using ProductReviewAPI.Interfaces;
+using ProductReviewAPI.Mappers;
 
 namespace ProductReviewAPI.Controllers
 {
@@ -22,6 +25,7 @@ namespace ProductReviewAPI.Controllers
             _signInManager = signInManager;
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginUserDto loginUserDto)
         {
@@ -47,11 +51,12 @@ namespace ProductReviewAPI.Controllers
                 {
                     UserName = user.UserName,
                     Email = user.Email,
-                    Token = _tokenService.CreateToken(user)
+                    Token = await _tokenService.CreateToken(user)
                 }
             );
         }
 
+        [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterUserDto registerUserDto)
         {
@@ -60,6 +65,12 @@ namespace ProductReviewAPI.Controllers
                 if (!ModelState.IsValid)
                 {
                     return BadRequest(ModelState);
+                }
+
+                var existingUserByEmail = await _userManager.FindByEmailAsync(registerUserDto.Email);
+                if (existingUserByEmail != null)
+                {
+                    return BadRequest("Email is already registered");
                 }
 
                 var user = new User
@@ -79,7 +90,7 @@ namespace ProductReviewAPI.Controllers
                             {
                                 UserName = user.UserName,
                                 Email = user.Email,
-                                Token = _tokenService.CreateToken(user)
+                                Token = await _tokenService.CreateToken(user)
                             }    
                         );
                     }
@@ -97,6 +108,87 @@ namespace ProductReviewAPI.Controllers
             {
                 return StatusCode(500, ex);
             }
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
+        public async Task<IActionResult> GetUsers()
+        {
+            var users = await _userManager.Users.ToListAsync();
+
+            var usersDto = new List<UserDto>();
+
+            foreach (var user in users)
+            {
+                var role = await _userManager.GetRolesAsync(user);
+                usersDto.Add(new UserDto
+                {
+                    Id = user.Id,
+                    UserName = user.UserName,
+                    Email = user.Email,
+                    Role = role.FirstOrDefault()
+                });
+            }
+
+            return Ok(usersDto);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUser(string id, [FromBody] EditUserDto editUserDto)
+        {
+            if (string.IsNullOrEmpty(editUserDto.UserName) 
+                || string.IsNullOrEmpty(editUserDto.Email) 
+                || string.IsNullOrEmpty(editUserDto.Role))
+            {
+                return BadRequest("All fields are required");
+            }
+
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var currentRole = await _userManager.GetRolesAsync(user);
+            await _userManager.RemoveFromRolesAsync(user, currentRole);
+
+            var result = await _userManager.AddToRoleAsync(user, editUserDto.Role);
+            if (!result.Succeeded)
+            {
+                return BadRequest(result.Errors);
+            }
+
+            user.UserName = editUserDto.UserName;
+            user.Email = editUserDto.Email;
+
+            result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                return BadRequest(result.Errors);
+            }
+
+            return Ok(new { Message = "User updated successfully" });
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpDelete]
+        [Route("{id}")]
+        public async Task<IActionResult> DeleteUser([FromRoute] string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound($"User with id {id} not found.");
+            }
+
+            var result = await _userManager.DeleteAsync(user);
+            if (!result.Succeeded)
+            {
+                return BadRequest(result.Errors);
+            }
+
+            return Ok(new { Message = $"User {id} was deleted successfully." });
         }
     }
 }
