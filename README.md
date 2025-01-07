@@ -13,7 +13,7 @@ This is a C# API project developed as a college project using .NET 8. The API al
 - Open ```ProductReviewAPI.sln```
 - Build > Clean solution
 - Tools > NuGet Package Manager > Package Manager Console
-- Run the commands ```Add-Migration init``` and ```Update-Database```
+- Run the commands ```Add-Migration init``` and ```Update-Database``` (Windows Authentication)
 
 ##
 ![API routes in Swagger](swagger.png)
