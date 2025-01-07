@@ -13,7 +13,7 @@ This is a C# API project developed as a college project using .NET 8. The API al
 - Open ```ProductReviewAPI.sln```
 - Build > Clean solution
 - Tools > NuGet Package Manager > Package Manager Console
-- In ```appsettings.json``` replace ```PC_NAME``` and ```DB_NAME``` (Windows Authentication)
+- In ```appsettings.json``` replace ```PC_NAME``` (example DESKTOP-ABC123D) and ```DB_NAME```. It's using Windows Authentication
 - Run the commands ```Add-Migration init``` and ```Update-Database```
 
 ##
