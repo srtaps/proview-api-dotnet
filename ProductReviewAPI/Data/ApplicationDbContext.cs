@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using ProductReviewAPI.Configuration;
 using ProductReviewAPI.Entities;
 
 namespace ProductReviewAPI.Data
@@ -19,20 +20,27 @@ namespace ProductReviewAPI.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            List<IdentityRole> roles = new List<IdentityRole>
-            {
-                new IdentityRole
-                {
-                    Name = "Admin",
-                    NormalizedName = "ADMIN"
-                },
-                new IdentityRole
-                {
-                    Name = "User",
-                    NormalizedName = "USER"
-                }
-            };
-            builder.Entity<IdentityRole>().HasData(roles);
+
+            //List<IdentityRole> roles = new List<IdentityRole>
+            //{
+            //    new IdentityRole
+            //    {
+            //        Name = "Admin",
+            //        NormalizedName = "ADMIN"
+            //    },
+            //    new IdentityRole
+            //    {
+            //        Name = "User",
+            //        NormalizedName = "USER"
+            //    }
+            //};
+            //builder.Entity<IdentityRole>().HasData(roles);
+
+            builder.ApplyConfiguration(new RoleConfiguration());
+            builder.ApplyConfiguration(new UserConfiguration());
+            builder.ApplyConfiguration(new UserRoleConfiguration());
+            builder.ApplyConfiguration(new ProductConfiguration());
+            builder.ApplyConfiguration(new ReviewConfiguration());
         }
     }
 }
