@@ -11,9 +11,9 @@ This is a C# API project developed as a college project using .NET 8. The API al
 ### Instructions
 
 - Open ```ProductReviewAPI.sln```
-- Build > Rebuild solution
+- Build > Clean solution
 - Tools > NuGet Package Manager > Package Manager Console
 - Run the commands ```Add-Migration init``` and ```Update-Database```
 
 ##
-![API example in Swagger](swagger.png)
+![API routes in Swagger](swagger.png)
